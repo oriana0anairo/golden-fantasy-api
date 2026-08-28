@@ -1,0 +1,25 @@
+# Blueprint de Render. En Railway no hace falta este archivo:
+# se configuran los mismos comandos y variables desde el panel.
+services:
+  - type: web
+    name: golden-fantasy-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    # Aplica migraciones pendientes antes de publicar la nueva versión.
+    preDeployCommand: npm run db:deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # El resto se configuran a mano en el panel (son secretos):
+      # DATABASE_URL, DIRECT_URL, JWT_SECRET, CORS_ORIGIN
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

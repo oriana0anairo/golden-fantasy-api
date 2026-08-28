@@ -1,0 +1,29 @@
+// Golden Fantasy — esquema de base de datos.
+// Sprint 0: solo el modelo User. El resto del modelo de datos
+// (RawMaterial, MaterialLot, Production, ProductionMaterial, Product,
+// SMLVConfig, Order, OrderItem) llega en épicas posteriores.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BUYER
+  ADMIN_OWNER
+  ADMIN_COLLABORATOR
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(BUYER)
+  createdAt    DateTime @default(now())
+
+  @@map("users")
+}
