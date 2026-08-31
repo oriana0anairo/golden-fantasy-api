@@ -1,4 +1,4 @@
-import type { Role } from '@prisma/client';
+import { Role } from '@prisma/client';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { env } from '../config';
 
@@ -6,6 +6,17 @@ import { env } from '../config';
 export interface TokenPayload {
   userId: string;
   role: Role;
+}
+
+const ROLES_VALIDOS: readonly string[] = Object.values(Role);
+
+/**
+ * El payload de un JWT es `any` para TypeScript (`JwtPayload` tiene índice
+ * abierto), así que el rol se valida contra el enum real en runtime: un token
+ * con un rol inventado se rechaza en vez de colarse hasta `requireRole`.
+ */
+function esRoleValido(valor: unknown): valor is Role {
+  return typeof valor === 'string' && ROLES_VALIDOS.includes(valor);
 }
 
 export function signToken(payload: TokenPayload): string {
@@ -21,9 +32,10 @@ export function verifyToken(token: string): TokenPayload {
     throw new Error('Token con formato inesperado');
   }
 
-  const { userId, role } = decoded as jwt.JwtPayload & Partial<TokenPayload>;
+  const userId: unknown = decoded.userId;
+  const role: unknown = decoded.role;
 
-  if (typeof userId !== 'string' || typeof role !== 'string') {
+  if (typeof userId !== 'string' || !esRoleValido(role)) {
     throw new Error('Token con formato inesperado');
   }
 
