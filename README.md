@@ -26,8 +26,8 @@ npm run dev                 # http://localhost:4000
 
 | Variable | Obligatoria | Para qué sirve |
 |---|---|---|
-| `DATABASE_URL` | sí | Conexión que usa la app en runtime. En Supabase, la del **pooler** (puerto 6543). |
-| `DIRECT_URL` | sí para migrar | Conexión **directa** (puerto 5432). La usa `prisma migrate`; el pooler no soporta DDL. |
+| `DATABASE_URL` | sí | Conexión de la app en runtime. En Supabase: **Transaction pooler**, puerto 6543. |
+| `DIRECT_URL` | sí para migrar | La usa `prisma migrate`. En Supabase: **Session pooler**, puerto 5432. El transaction pooler no sirve acá (las migraciones necesitan DDL y locks). |
 | `JWT_SECRET` | sí | Secreto para firmar los JWT. Mínimo 32 caracteres: `openssl rand -base64 48`. |
 | `JWT_EXPIRES_IN` | no (`7d`) | Vigencia del token. |
 | `PORT` | no (`4000`) | Puerto del servidor. En Railway/Render lo inyecta la plataforma. |
@@ -118,3 +118,27 @@ Lo que hay que hacer **manualmente en la plataforma**:
 6. El seed del admin dueño se corre **una sola vez**, a mano, con las variables
    `ADMIN_OWNER_*` apuntando a la base de producción.
 7. Cuando el frontend esté desplegado en Vercel, poner esa URL en `CORS_ORIGIN`.
+
+## Dónde sacar las cadenas de conexión de Supabase
+
+Panel de Supabase → botón **Connect** (arriba) → pestaña **ORMs**. Ahí aparecen las dos
+que necesitas, ya armadas:
+
+- **Transaction pooler** (puerto 6543) → `DATABASE_URL`
+- **Session pooler** (puerto 5432) → `DIRECT_URL`
+
+Reemplaza `[YOUR-PASSWORD]` por la contraseña de la base de datos (la de *Database
+Settings*, no la de tu cuenta de Supabase). El usuario tiene la forma
+`postgres.<project-ref>`, no `postgres` a secas.
+
+> No uses la opción **Direct connection** (`db.<ref>.supabase.co`): es solo IPv6 y
+> Render no la alcanza. Por eso `DIRECT_URL` apunta al *session pooler*, que sí es IPv4.
+
+## Errores frecuentes de deploy
+
+| Error | Causa |
+|---|---|
+| `FATAL: (ENOTFOUND) tenant/user postgres.xxxx not found` | La cadena de conexión todavía tiene el placeholder del ejemplo, o el usuario no lleva el `.<project-ref>`. |
+| `password authentication failed` | La contraseña de la cadena no es la de la base de datos, o tiene caracteres especiales sin escapar (URL-encode `@`, `#`, `/`, `?`). |
+| `Could not find a declaration file for module 'express'` | Se instaló sin devDependencies. El build necesita `npm ci --include=dev` (ya cubierto por el `.npmrc` del repo). |
+| Migraciones que se cuelgan o fallan por locks | `DIRECT_URL` apunta al transaction pooler (6543) en vez del session pooler (5432). |
