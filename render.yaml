@@ -5,9 +5,7 @@ services:
     name: golden-fantasy-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
-    # Aplica migraciones pendientes antes de publicar la nueva versión.
-    preDeployCommand: npm run db:deploy
+    buildCommand: npm ci && npm run build && npm run db:deploy
     startCommand: npm start
     healthCheckPath: /health
     envVars:
