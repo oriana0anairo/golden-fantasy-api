@@ -5,7 +5,7 @@ services:
     name: golden-fantasy-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build && npm run db:deploy
+    buildCommand: npm ci && npm run build && npm run db:deploy --include=dev
     startCommand: npm start
     healthCheckPath: /health
     envVars:
