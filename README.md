@@ -104,7 +104,10 @@ router.get('/reportes', requireAuth, requireRole('ADMIN_OWNER'), handler);
 Lo que hay que hacer **manualmente en la plataforma**:
 
 1. Conectar este repo y elegir la rama.
-2. Comandos: build `npm ci && npm run build`, start `npm start`.
+2. Comandos: build `npm ci --include=dev && npm run build`, start `npm start`.
+   El `--include=dev` es obligatorio: con `NODE_ENV=production` npm omite las
+   devDependencies, y el build necesita TypeScript y los `@types` para compilar.
+   (El `.npmrc` del repo ya fuerza esto, el flag lo deja explícito.)
 3. Cargar las variables de entorno de la tabla de arriba (`DATABASE_URL`, `DIRECT_URL`,
    `JWT_SECRET`, `CORS_ORIGIN`, `NODE_ENV=production`). No definas `PORT`: lo inyecta
    la plataforma.

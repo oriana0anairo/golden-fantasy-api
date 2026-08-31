@@ -5,7 +5,10 @@ services:
     name: golden-fantasy-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build && npm run db:deploy --include=dev
+    # `--include=dev`: NODE_ENV=production hace que npm omita las
+    # devDependencies, y el build necesita TypeScript y los @types.
+    # Las migraciones van acá porque el plan free no tiene preDeployCommand.
+    buildCommand: npm ci --include=dev && npm run build && npm run db:deploy
     startCommand: npm start
     healthCheckPath: /health
     envVars:
