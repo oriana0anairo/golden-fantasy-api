@@ -7,8 +7,10 @@ services:
     plan: free
     # `--include=dev`: NODE_ENV=production hace que npm omita las
     # devDependencies, y el build necesita TypeScript y los @types.
-    # Las migraciones van acá porque el plan free no tiene preDeployCommand.
-    buildCommand: npm ci --include=dev && npm run build && npm run db:deploy
+    # Las migraciones y el seed van acá porque el plan free no tiene
+    # preDeployCommand ni acceso a shell. El seed es seguro de repetir:
+    # si el admin ya existe, no lo toca.
+    buildCommand: npm ci --include=dev && npm run build && npm run db:deploy && npm run db:seed
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -23,4 +25,11 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: CORS_ORIGIN
+        sync: false
+      # Crean el admin dueño en el primer deploy (no hay registro de admin).
+      - key: ADMIN_OWNER_NAME
+        sync: false
+      - key: ADMIN_OWNER_EMAIL
+        sync: false
+      - key: ADMIN_OWNER_PASSWORD
         sync: false

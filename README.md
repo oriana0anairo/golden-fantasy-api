@@ -36,6 +36,7 @@ npm run dev                 # http://localhost:4000
 | `ADMIN_OWNER_NAME` | solo seed | Nombre del admin dueño. |
 | `ADMIN_OWNER_EMAIL` | solo seed | Correo del admin dueño. |
 | `ADMIN_OWNER_PASSWORD` | solo seed | Contraseña del admin dueño (mínimo 8 caracteres). |
+| `ADMIN_OWNER_RESET_PASSWORD` | no | `true` fuerza al seed a restablecer la contraseña del admin existente. Ver abajo. |
 
 El arranque valida estas variables: si falta alguna, el proceso muere de una con un
 mensaje claro en vez de fallar a mitad de una petición.
@@ -115,9 +116,32 @@ Lo que hay que hacer **manualmente en la plataforma**:
 5. Aplicar migraciones: en Render queda automático con `preDeployCommand` (ver
    `render.yaml`); en Railway agrégalo como comando de pre-deploy o corre
    `npm run db:deploy` a mano apuntando a la base de producción.
-6. El seed del admin dueño se corre **una sola vez**, a mano, con las variables
-   `ADMIN_OWNER_*` apuntando a la base de producción.
+6. Cargar `ADMIN_OWNER_NAME`, `ADMIN_OWNER_EMAIL` y `ADMIN_OWNER_PASSWORD`: el
+   seed corre dentro del build y crea el admin dueño en el primer deploy. No
+   hace falta shell ni clonar el repo (ver abajo).
 7. Cuando el frontend esté desplegado en Vercel, poner esa URL en `CORS_ORIGIN`.
+
+## El admin dueño se crea en el deploy
+
+No hay registro público de admin, y el plan free de Render no tiene shell ni jobs,
+así que el seed va dentro del `buildCommand`. Es seguro que corra en cada deploy:
+
+| Situación | Qué hace |
+|---|---|
+| Sin `ADMIN_OWNER_EMAIL` ni `ADMIN_OWNER_PASSWORD` | No hace nada y termina bien (no rompe el build). |
+| El admin no existe | Lo crea con rol `ADMIN_OWNER`. |
+| El admin ya existe | **No lo toca.** No le pisa la contraseña en cada deploy. |
+| El admin existe y `ADMIN_OWNER_RESET_PASSWORD=true` | Restablece la contraseña a la de la variable. |
+
+Sólo una de las dos variables cargadas (por ejemplo el correo sin la contraseña) es
+un error de configuración y falla el build a propósito, para que no pase inadvertido.
+
+**Si olvidas la contraseña del admin:** pon `ADMIN_OWNER_PASSWORD` con la nueva y
+`ADMIN_OWNER_RESET_PASSWORD=true`, lanza un deploy, y después quita esa segunda
+variable para que el siguiente deploy no vuelva a restablecerla.
+
+Para dejar de crear/tocar el admin, quita **ambas** variables (`ADMIN_OWNER_EMAIL`
+y `ADMIN_OWNER_PASSWORD`) del panel.
 
 ## Dónde sacar las cadenas de conexión de Supabase
 
