@@ -1,6 +1,6 @@
 // Golden Fantasy — esquema de base de datos.
-// Sprint 0: solo el modelo User. El resto del modelo de datos
-// (RawMaterial, MaterialLot, Production, ProductionMaterial, Product,
+// Épica 2: se agrega Product (catálogo público). El resto del modelo de
+// datos (RawMaterial, MaterialLot, Production, ProductionMaterial,
 // SMLVConfig, Order, OrderItem) llega en épicas posteriores.
 
 generator client {
@@ -26,4 +26,27 @@ model User {
   createdAt    DateTime @default(now())
 
   @@map("users")
+}
+
+/**
+ * Pieza publicada en el catálogo. Cada artículo es único (sin variantes):
+ * `available` pasa a `false` en cuanto se vende (lo escribe la épica de
+ * órdenes) para que no se pueda volver a comprar.
+ * `specs` guarda pares [etiqueta, valor] (material, medidas, etc.) tal
+ * como se muestran en el detalle — no necesitan su propia tabla.
+ */
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  price       Int
+  description String
+  specs       Json
+  imageUrl    String?
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@index([available])
+  @@map("products")
 }

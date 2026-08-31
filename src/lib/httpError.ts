@@ -24,6 +24,10 @@ export class HttpError extends Error {
     return new HttpError(403, message, code);
   }
 
+  static notFound(message: string, code = 'NOT_FOUND'): HttpError {
+    return new HttpError(404, message, code);
+  }
+
   static conflict(message: string, code = 'CONFLICT'): HttpError {
     return new HttpError(409, message, code);
   }

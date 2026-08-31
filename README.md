@@ -5,9 +5,9 @@ Es dueño de la base de datos, la lógica de negocio y el costeo. Lo consume el 
 de frontend `golden-fantasy-front` (Next.js) vía **REST + JWT** — ver decisión D5 del
 documento de arquitectura.
 
-**Estado: Sprint 0.** Solo hay auth (`User` + login/registro + middleware de rol).
-Productos, materiales, producciones, órdenes y el webhook de Mercado Pago llegan en
-épicas posteriores.
+**Estado: Épica 2.** Auth (`User` + login/registro + middleware de rol) y el
+catálogo público (`Product`) de solo lectura. Materiales, producciones, órdenes y
+el webhook de Mercado Pago llegan en épicas posteriores.
 
 ## Stack
 Node.js 22 · Express 5 · TypeScript · Prisma 7 + PostgreSQL (Supabase) · JWT · Zod
@@ -49,6 +49,8 @@ mensaje claro en vez de fallar a mitad de una petición.
 | `POST` | `/auth/register` | — | Registro público. **Siempre crea rol `BUYER`.** |
 | `POST` | `/auth/login` | — | Login de cualquier rol. Devuelve JWT. |
 | `GET` | `/auth/me` | Bearer | Verifica que el token siga siendo válido. |
+| `GET` | `/productos` | — | Catálogo público. Filtros opcionales `?category=` y `?search=` (nombre o categoría, sin distinguir mayúsculas). Solo devuelve piezas `available`. |
+| `GET` | `/productos/:id` | — | Detalle de una pieza. `404` si no existe o ya no está disponible (se vendió). |
 
 `register` y `login` devuelven:
 

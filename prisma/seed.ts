@@ -1,6 +1,7 @@
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { hashPassword, prisma, disconnectDb } from '../src/lib';
+import { seedProducts } from './seedProducts';
 
 /**
  * Crea el usuario ADMIN_OWNER inicial. No hay registro público de admin:
@@ -44,9 +45,9 @@ function leerConfig() {
   return parsed.data;
 }
 
-async function main(): Promise<void> {
+async function seedAdmin(): Promise<void> {
   if (seedNoConfigurado()) {
-    console.log('Seed omitido: no hay ADMIN_OWNER_EMAIL ni ADMIN_OWNER_PASSWORD configurados.');
+    console.log('Seed de admin omitido: no hay ADMIN_OWNER_EMAIL ni ADMIN_OWNER_PASSWORD configurados.');
     return;
   }
 
@@ -73,6 +74,11 @@ async function main(): Promise<void> {
 
   const accion = existente ? 'contraseña restablecida' : 'creado';
   console.log(`Admin dueño ${accion}: ${admin.email} (${admin.role})`);
+}
+
+async function main(): Promise<void> {
+  await seedAdmin();
+  await seedProducts();
 }
 
 main()
