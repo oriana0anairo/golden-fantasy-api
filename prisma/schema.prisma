@@ -29,24 +29,32 @@ model User {
 }
 
 /**
- * Pieza publicada en el catálogo. Cada artículo es único (sin variantes):
- * `available` pasa a `false` en cuanto se vende (lo escribe la épica de
- * órdenes) para que no se pueda volver a comprar.
+ * Pieza publicada en el catálogo. Cada artículo es único (sin variantes).
+ * `status` decide si aparece en el catálogo — la épica 5 publicará acá el
+ * resultado de una producción, que hasta entonces vive como DRAFT.
+ * `stockQuantity` es cuántas unidades quedan: la épica de órdenes lo
+ * descuenta, y en 0 la pieza deja de aparecer aunque siga PUBLISHED.
  * `specs` guarda pares [etiqueta, valor] (material, medidas, etc.) tal
  * como se muestran en el detalle — no necesitan su propia tabla.
  */
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  category    String
-  price       Int
-  description String
-  specs       Json
-  imageUrl    String?
-  available   Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id            String        @id @default(uuid())
+  name          String
+  category      String
+  price         Int
+  description   String
+  specs         Json
+  imageUrl      String?
+  stockQuantity Int           @default(1)
+  status        ProductStatus @default(PUBLISHED)
+  createdAt     DateTime      @default(now())
 
   @@index([category])
-  @@index([available])
+  @@index([status])
   @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
 }

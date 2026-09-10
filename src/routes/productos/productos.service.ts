@@ -3,7 +3,7 @@ import { HttpError } from '../../lib';
 import { findAvailableProductById, findAvailableProducts } from './productos.data';
 import type { ListProductsQuery } from './productos.schema';
 
-/** Lo que ve el comprador: nunca se expone `available` (siempre es true acá). */
+/** Lo que ve el comprador: `status` no se expone (siempre es PUBLISHED acá). */
 export interface ProductDTO {
   id: string;
   name: string;
@@ -12,6 +12,8 @@ export interface ProductDTO {
   description: string;
   specs: unknown;
   imageUrl: string | null;
+  /** Unidades disponibles. El carrito (épica 3) no deja pedir más de esto. */
+  stockQuantity: number;
 }
 
 function toDTO(product: Product): ProductDTO {
@@ -23,6 +25,7 @@ function toDTO(product: Product): ProductDTO {
     description: product.description,
     specs: product.specs,
     imageUrl: product.imageUrl,
+    stockQuantity: product.stockQuantity,
   };
 }
 

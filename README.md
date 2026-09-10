@@ -49,8 +49,8 @@ mensaje claro en vez de fallar a mitad de una petición.
 | `POST` | `/auth/register` | — | Registro público. **Siempre crea rol `BUYER`.** |
 | `POST` | `/auth/login` | — | Login de cualquier rol. Devuelve JWT. |
 | `GET` | `/auth/me` | Bearer | Verifica que el token siga siendo válido. |
-| `GET` | `/productos` | — | Catálogo público. Filtros opcionales `?category=` y `?search=` (nombre o categoría, sin distinguir mayúsculas). Solo devuelve piezas `available`. |
-| `GET` | `/productos/:id` | — | Detalle de una pieza. `404` si no existe o ya no está disponible (se vendió). |
+| `GET` | `/productos` | — | Catálogo público. Filtros opcionales `?category=` y `?search=` (nombre o categoría, sin distinguir mayúsculas). Solo devuelve piezas `PUBLISHED` con unidades disponibles. |
+| `GET` | `/productos/:id` | — | Detalle de una pieza. `404` si no existe, si está en `DRAFT`, o si ya no quedan unidades. |
 
 `register` y `login` devuelven:
 
