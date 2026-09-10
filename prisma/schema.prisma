@@ -29,13 +29,16 @@ model User {
 }
 
 /**
- * Pieza publicada en el catálogo. Cada artículo es único (sin variantes).
+ * Pieza publicada en el catálogo. Sin variantes (talla/color), pero puede
+ * tener varias unidades idénticas del mismo diseño (D7).
  * `status` decide si aparece en el catálogo — la épica 5 publicará acá el
  * resultado de una producción, que hasta entonces vive como DRAFT.
  * `stockQuantity` es cuántas unidades quedan: la épica de órdenes lo
  * descuenta, y en 0 la pieza deja de aparecer aunque siga PUBLISHED.
  * `specs` guarda pares [etiqueta, valor] (material, medidas, etc.) tal
  * como se muestran en el detalle — no necesitan su propia tabla.
+ * `photos` va en orden: la primera es la principal y el resto alimentan la
+ * fila de miniaturas del modal de detalle (wireframe 8.5).
  */
 model Product {
   id            String        @id @default(uuid())
@@ -44,7 +47,7 @@ model Product {
   price         Int
   description   String
   specs         Json
-  imageUrl      String?
+  photos        String[]
   stockQuantity Int           @default(1)
   status        ProductStatus @default(PUBLISHED)
   createdAt     DateTime      @default(now())

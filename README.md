@@ -52,6 +52,10 @@ mensaje claro en vez de fallar a mitad de una petición.
 | `GET` | `/productos` | — | Catálogo público. Filtros opcionales `?category=` y `?search=` (nombre o categoría, sin distinguir mayúsculas). Solo devuelve piezas `PUBLISHED` con unidades disponibles. |
 | `GET` | `/productos/:id` | — | Detalle de una pieza. `404` si no existe, si está en `DRAFT`, o si ya no quedan unidades. |
 
+Cada pieza trae `photos` (arreglo ordenado: la primera es la principal, el resto
+son las miniaturas del detalle) y `stockQuantity`. Una pieza sin fotos devuelve
+`[]`, nunca `null`.
+
 `register` y `login` devuelven:
 
 ```json

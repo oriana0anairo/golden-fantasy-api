@@ -11,7 +11,8 @@ export interface ProductDTO {
   price: number;
   description: string;
   specs: unknown;
-  imageUrl: string | null;
+  /** En orden: la primera es la principal, el resto son miniaturas. */
+  photos: string[];
   /** Unidades disponibles. El carrito (épica 3) no deja pedir más de esto. */
   stockQuantity: number;
 }
@@ -24,7 +25,7 @@ function toDTO(product: Product): ProductDTO {
     price: product.price,
     description: product.description,
     specs: product.specs,
-    imageUrl: product.imageUrl,
+    photos: product.photos,
     stockQuantity: product.stockQuantity,
   };
 }
