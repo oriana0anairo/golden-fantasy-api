@@ -61,3 +61,54 @@ enum ProductStatus {
   DRAFT
   PUBLISHED
 }
+
+/**
+ * Pedido. Nace en PENDING al crear la preferencia de Mercado Pago y solo
+ * pasa a PAID desde el webhook, nunca desde el navegador del comprador
+ * (que puede cerrar la pestaña o mentir sobre el resultado).
+ * `subtotal` y `total` son iguales en v1: no hay costo de envío (C4).
+ */
+model Order {
+  id                      String      @id @default(uuid())
+  buyerId                 String
+  status                  OrderStatus @default(PENDING)
+  shippingName            String
+  shippingAddress         String
+  shippingCity            String
+  shippingPhone           String
+  subtotal                Int
+  total                   Int
+  mercadopagoPaymentId    String?
+  mercadopagoPreferenceId String?
+  createdAt               DateTime    @default(now())
+  items                   OrderItem[]
+
+  @@index([buyerId])
+  @@index([status])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+/**
+ * Línea del pedido. `unitPrice` es una copia del precio al momento de
+ * comprar, no una referencia viva: si el taller sube el precio después,
+ * lo que se cobró no debe cambiar (mismo criterio que el snapshot de
+ * materiales en producciones).
+ */
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  quantity  Int
+  unitPrice Int
+  subtotal  Int
+
+  @@index([orderId])
+  @@map("order_items")
+}

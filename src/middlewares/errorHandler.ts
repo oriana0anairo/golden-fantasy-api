@@ -18,7 +18,8 @@ export function notFoundHandler(req: Request, res: Response): void {
  */
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: { code: err.code, message: err.message } });
+    const cuerpo = { code: err.code, message: err.message, ...(err.details ? { details: err.details } : {}) };
+    res.status(err.status).json({ error: cuerpo });
     return;
   }
 

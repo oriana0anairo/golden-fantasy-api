@@ -37,6 +37,11 @@ npm run dev                 # http://localhost:4000
 | `ADMIN_OWNER_EMAIL` | solo seed | Correo del admin dueño. |
 | `ADMIN_OWNER_PASSWORD` | solo seed | Contraseña del admin dueño (mínimo 8 caracteres). |
 | `ADMIN_OWNER_RESET_PASSWORD` | no | `true` fuerza al seed a restablecer la contraseña del admin existente. Ver abajo. |
+| `MERCADOPAGO_ACCESS_TOKEN` | para pagar | Token de Mercado Pago. Sin él la API vive, pero `POST /ordenes` responde `503`. |
+| `MERCADOPAGO_WEBHOOK_SECRET` | no | Si se define, el webhook exige firma válida (`x-signature`). |
+| `MERCADOPAGO_API_URL` | no | Solo para pruebas: apunta el cliente a un doble en vez de Mercado Pago. |
+| `FRONTEND_URL` | no | URL del frontend para las `back_urls`. Por defecto, el primer `CORS_ORIGIN`. |
+| `PUBLIC_URL` | no | URL pública de este backend para el `notification_url`. En Render sale de `RENDER_EXTERNAL_URL`. |
 
 El arranque valida estas variables: si falta alguna, el proceso muere de una con un
 mensaje claro en vez de fallar a mitad de una petición.
@@ -51,6 +56,9 @@ mensaje claro en vez de fallar a mitad de una petición.
 | `GET` | `/auth/me` | Bearer | Verifica que el token siga siendo válido. |
 | `GET` | `/productos` | — | Catálogo público. Filtros opcionales `?category=` y `?search=` (nombre o categoría, sin distinguir mayúsculas). Solo devuelve piezas `PUBLISHED` con unidades disponibles. |
 | `GET` | `/productos/:id` | — | Detalle de una pieza. `404` si no existe, si está en `DRAFT`, o si ya no quedan unidades. |
+
+| `POST` | `/ordenes` | Bearer | Crea el pedido y la preferencia de pago. Devuelve `{ orderId, initPoint }`. |
+| `POST` | `/webhooks/mercadopago` | — | Lo llama Mercado Pago para confirmar el pago. |
 
 Cada pieza trae `photos` (arreglo ordenado: la primera es la principal, el resto
 son las miniaturas del detalle) y `stockQuantity`. Una pieza sin fotos devuelve
@@ -172,3 +180,29 @@ Settings*, no la de tu cuenta de Supabase). El usuario tiene la forma
 | `password authentication failed` | La contraseña de la cadena no es la de la base de datos, o tiene caracteres especiales sin escapar (URL-encode `@`, `#`, `/`, `?`). |
 | `Could not find a declaration file for module 'express'` | Se instaló sin devDependencies. El build necesita `npm ci --include=dev` (ya cubierto por el `.npmrc` del repo). |
 | Migraciones que se cuelgan o fallan por locks | `DIRECT_URL` apunta al transaction pooler (6543) en vez del session pooler (5432). |
+
+## Flujo de pago (épica 3)
+
+1. El comprador (con sesión) manda su carrito a `POST /ordenes`. El backend
+   **ignora los precios que lleguen del cliente**: relee cada `Product`, valida
+   que esté publicado y que la cantidad no pase de `min(5, stockQuantity)`, y
+   calcula el total. Si algo falla responde `400` con el detalle por producto y
+   no crea nada.
+2. Se crea el `Order` en `PENDING` y se pide la preferencia a Mercado Pago.
+3. El frontend redirige al comprador al `initPoint`.
+4. Mercado Pago llama a `POST /webhooks/mercadopago`. El backend **consulta el
+   pago contra la API** (nunca cree en el cuerpo de la notificación), y si está
+   aprobado pasa el pedido a `PAID` y descuenta stock, todo en una transacción.
+5. Un reintento de la misma notificación no descuenta stock dos veces: la
+   transición solo se aplica si el pedido sigue en `PENDING`.
+
+El pedido **nunca** pasa a `PAID` desde el navegador: las `back_urls` solo sirven
+para mostrarle algo al comprador.
+
+### Rutas que debe crear el frontend
+
+| Resultado | Ruta |
+|---|---|
+| Pago aprobado | `{FRONTEND_URL}/checkout/exito` |
+| Pago rechazado | `{FRONTEND_URL}/checkout/fallo` |
+| Pago pendiente | `{FRONTEND_URL}/checkout/pendiente` |

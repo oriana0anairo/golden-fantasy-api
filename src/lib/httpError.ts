@@ -7,13 +7,15 @@ export class HttpError extends Error {
     readonly status: number,
     message: string,
     readonly code: string,
+    /** Detalle opcional, ej. qué ítem del pedido falló y por qué. */
+    readonly details?: unknown,
   ) {
     super(message);
     this.name = 'HttpError';
   }
 
-  static badRequest(message: string, code = 'BAD_REQUEST'): HttpError {
-    return new HttpError(400, message, code);
+  static badRequest(message: string, code = 'BAD_REQUEST', details?: unknown): HttpError {
+    return new HttpError(400, message, code, details);
   }
 
   static unauthorized(message: string, code = 'UNAUTHORIZED'): HttpError {

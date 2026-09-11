@@ -1,1 +1,1 @@
-export { env, allowedOrigins, isProduction } from './env';
+export { env, allowedOrigins, isProduction, frontendUrl, publicUrl } from './env';
