@@ -3,6 +3,15 @@ import { ZodError } from 'zod';
 import { isProduction } from '../config';
 import { HttpError } from '../lib';
 
+/**
+ * Violación de llave foránea de Prisma (P2003). En la práctica significa que
+ * el pedido apunta a un comprador o producto que ya no existe — por ejemplo,
+ * un token todavía vigente de una cuenta borrada.
+ */
+function isForeignKeyError(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && 'code' in err && err.code === 'P2003';
+}
+
 function isBodyParseError(err: unknown): boolean {
   return err instanceof SyntaxError && 'type' in err && err.type === 'entity.parse.failed';
 }
@@ -26,6 +35,16 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   if (err instanceof ZodError) {
     const details = err.issues.map((issue) => ({ campo: issue.path.join('.'), mensaje: issue.message }));
     res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Datos inválidos', details } });
+    return;
+  }
+
+  if (isForeignKeyError(err)) {
+    res.status(409).json({
+      error: {
+        code: 'REFERENCIA_INEXISTENTE',
+        message: 'La petición apunta a un registro que ya no existe. Vuelve a iniciar sesión e inténtalo de nuevo.',
+      },
+    });
     return;
   }
 

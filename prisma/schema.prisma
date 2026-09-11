@@ -24,6 +24,7 @@ model User {
   passwordHash String
   role         Role     @default(BUYER)
   createdAt    DateTime @default(now())
+  orders       Order[]
 
   @@map("users")
 }
@@ -51,6 +52,7 @@ model Product {
   stockQuantity Int           @default(1)
   status        ProductStatus @default(PUBLISHED)
   createdAt     DateTime      @default(now())
+  orderItems    OrderItem[]
 
   @@index([category])
   @@index([status])
@@ -81,6 +83,7 @@ model Order {
   mercadopagoPaymentId    String?
   mercadopagoPreferenceId String?
   createdAt               DateTime    @default(now())
+  buyer                   User        @relation(fields: [buyerId], references: [id])
   items                   OrderItem[]
 
   @@index([buyerId])
@@ -101,14 +104,16 @@ enum OrderStatus {
  * materiales en producciones).
  */
 model OrderItem {
-  id        String @id @default(uuid())
+  id        String  @id @default(uuid())
   orderId   String
-  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
+  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   unitPrice Int
   subtotal  Int
 
   @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }

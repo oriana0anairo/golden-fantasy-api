@@ -206,3 +206,33 @@ para mostrarle algo al comprador.
 | Pago aprobado | `{FRONTEND_URL}/checkout/exito` |
 | Pago rechazado | `{FRONTEND_URL}/checkout/fallo` |
 | Pago pendiente | `{FRONTEND_URL}/checkout/pendiente` |
+
+## Integridad de los pedidos
+
+`Order.buyerId` apunta a `User.id` y `OrderItem.productId` a `Product.id`, ambas
+con `ON DELETE RESTRICT`: no se puede borrar un usuario que tiene pedidos ni un
+producto que ya se vendió. El historial de ventas no se rompe por un borrado.
+(Borrar un pedido sí arrastra sus ítems, con `CASCADE`.)
+
+Antes de desplegar la migración que crea estas llaves conviene revisar que no
+haya filas apuntando a registros inexistentes:
+
+```sql
+-- Órdenes cuyo comprador ya no existe
+select o.id, o."buyerId" from orders o
+  left join users u on u.id = o."buyerId" where u.id is null;
+
+-- Ítems cuyo producto ya no existe
+select i.id, i."orderId", i."productId" from order_items i
+  left join products p on p.id = i."productId" where p.id is null;
+```
+
+Si alguna devuelve filas, la migración **se detiene sola** con la lista exacta y
+sin modificar nada. En ese caso: corrige esas filas y, como Prisma marca la
+migración como fallida, ejecuta una vez
+
+```bash
+npx prisma migrate resolve --rolled-back 20260911152306_add_order_foreign_keys
+```
+
+antes de volver a desplegar.
